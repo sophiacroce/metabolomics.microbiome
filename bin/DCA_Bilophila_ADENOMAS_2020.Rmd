@@ -1,0 +1,70 @@
+---
+title: "DCA_Bilophila_Adenomas_2020"
+author: "Sophia Croce"
+date: "2023-03-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#how to create new folders: dir.create("...")
+
+library(tidyverse)
+library(ggplot2)
+
+load("./data/KIM_ADENOMAS_2020/.RData")
+
+
+#Restructure KIM_ADENOMAS_2020 Data for what I needed (DCA and Bilophila)
+DCA_Bilophila_data <-inner_join(metadata[,c("Sample","Study.Group")],mtb[,c("Sample","deoxycholate")],by="Sample",copy=FALSE) %>%
+                inner_join(., select(genera, c("Sample",contains("Bilophila"),contains("Clostridium"))), by="Sample")
+
+names(DCA_Bilophila_data)[4] <- "Bilophila"
+  
+```
+
+#
+```{r}
+
+Control <- filter(DCA_Bilophila_data, Study.Group == "Control");
+DCA_Bilophila_Control <- ggpubr::ggscatter(Control, "deoxycholate", "Bilophila", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          main = "Group Control") + geom_smooth(formula = y ~ x, method = "lm")
+
+Adenoma <- filter(DCA_Bilophila_data, Study.Group == "Adenoma");
+DCA_Bilophila_Adenoma <- ggpubr::ggscatter(Adenoma, "deoxycholate", "Bilophila", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          main = "Group Adenoma") + geom_smooth(formula = y ~ x, method = "lm")
+
+Carcinoma <- filter(DCA_Bilophila_data, Study.Group == "Carcinoma");
+DCA_Bilophila_Carcinoma <- ggpubr::ggscatter(Carcinoma, "deoxycholate", "Bilophila", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          main = "Group Carcinoma") + geom_smooth(formula = y ~ x, method = "lm")
+
+
+```
+
+## R Markdown
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

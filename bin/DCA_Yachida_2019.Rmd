@@ -1,0 +1,204 @@
+---
+title: "DCA_Bilophila_YACHIDA_2019"
+author: "Sophia Croce"
+date: "2023-03-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+
+load("./data/YACHIDA_CRC_2019/.RData")
+
+metadata$Sample<-as.character(metadata$Sample)
+
+#Restructure YACHIDA_CRC_2019 Data for what I needed (DCA and Bilophila)
+DCA_Bilophila_data_new <-inner_join(metadata[,c("Sample","Study.Group")],mtb[,c("Sample","_DCA")],by="Sample",copy=FALSE) %>%
+                inner_join(., select(genera, c("Sample",contains("Bilophila"))), by="Sample")
+
+names(DCA_Bilophila_data_new)[4] <- "Bilophila"
+
+```
+
+
+```{r}
+
+MP_new_data <- filter(DCA_Bilophila_data_new, Study.Group == "MP");
+DCA_Bilophila_Control <- ggpubr::ggscatter(MP_new_data, "_DCA", "Bilophila", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          main = "Group MP") + geom_smooth(formula = y ~ x, method = "lm")
+
+
+
+```
+
+
+
+#with OLD DATA 
+```{r}
+
+patient_info <- read_excel("./data/YACHIDA_CRC_2019/data2.xlsx", sheet = 1);
+ID_Bilophila <- read_excel("./data/YACHIDA_CRC_2019/data2.xlsx", sheet = 5);
+
+metabolites <- read_excel("./data/YACHIDA_CRC_2019/data2.xlsx", sheet = 3); 
+metabolites$ID<-as.character(metabolites$ID)
+ID_Bilophila$ID<-as.character(ID_Bilophila$ID)
+
+
+DCA_Bilophila_data_Yashida <-inner_join(patient_info[,c("ID","Group")],metabolites[,c("ID","DCA")],by="ID",copy=FALSE) %>%
+                inner_join(., select(ID_Bilophila, c("ID",contains("Bilophila"))), by="ID")
+
+```
+
+
+```{r}
+
+pdf(file = "~/metabolomics.microbiome/figures/Yachida_2019/Bilophila_DCA_plots.pdf")
+Healthy <- filter(DCA_Bilophila_data_Yashida, Group == "Healthy");
+DCA_Bilophila_Healthy <- ggpubr::ggscatter(Healthy, "DCA", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#993300',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Healthy") + geom_point(shape = 21, fill = '#FF9900', size = 2.5)
+
+MP <- filter(DCA_Bilophila_data_Yashida, Group == "MP");
+DCA_Bilophila_MP <- ggpubr::ggscatter(MP, "DCA", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#660000',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "MP") + geom_point(shape = 21, fill = '#CC0000', size = 2.5)
+
+Stage0 <- filter(DCA_Bilophila_data_Yashida, Group == "Stage_0");
+DCA_Bilophila_Stage0 <- ggpubr::ggscatter(Stage0, "DCA", "Bilophila_wadsworthia", 
+         add = "reg.line", add.params = list(color = '#663366', fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Stage_0") + geom_point(shape = 21, fill = '#CC99FF', size = 2.5)
+
+
+Stage_I_II <- filter(DCA_Bilophila_data_Yashida, Group == "Stage_I_II");
+DCA_Bilophila_StageI <- ggpubr::ggscatter(Stage_I_II, "DCA", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#006699',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Stage_I_II") + geom_point(shape = 21, fill = '#0099CC', size = 2.5)
+       
+
+Stage_III_IV <- filter(DCA_Bilophila_data_Yashida, Group == "Stage_III_IV");
+DCA_Bilophila_StageIII <- ggpubr::ggscatter(Stage_III_IV, "DCA", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#006633',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Stage_III_IV") + geom_point(shape = 21, fill = '#66CC99', size = 2.5)
+
+DCA_Bilophila_Healthy;
+DCA_Bilophila_MP;
+DCA_Bilophila_Stage0;
+DCA_Bilophila_StageI;
+DCA_Bilophila_StageIII;
+
+dev.off()
+
+```
+
+#Correlation between the two bacteria Clostridium scindens and Bilophila wadsworthia
+```{r}
+
+bacteria_abundance <- read_excel("./data/YACHIDA_CRC_2019/data2.xlsx", sheet = 4)
+bacteria_abundance$ID<-as.character(bacteria_abundance$ID)
+stage_bacteria_abundance <-inner_join(patient_info[,c("ID","Group")],bacteria_abundance[,c("ID","Clostridium scindens","Bilophila wadsworthia")], by="ID")
+names(stage_bacteria_abundance)[3] <- "Clostridium_scindens"
+names(stage_bacteria_abundance)[4] <- "Bilophila_wadsworthia"
+
+Healthy <- filter(stage_bacteria_abundance, Group == "Healthy");
+MP <- filter(stage_bacteria_abundance, Group == "MP");
+Stage_0 <- filter(stage_bacteria_abundance, Group == "Stage_0");
+Stage_I_II <- filter(stage_bacteria_abundance, Group == "Stage_I_II");
+Stage_III_IV <- filter(stage_bacteria_abundance, Group == "Stage_III_IV");
+
+```
+
+```{r}
+
+
+pdf(file = "~/metabolomics.microbiome/figures/Yachida_2019/Bilophila_Clostridium_plots.pdf")
+Bilophila_Clostridium_healthy <- ggpubr::ggscatter(Healthy, "Clostridium_scindens", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#993300',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Healthy") + geom_point(shape = 21, fill = '#FF9900', size = 2.5)
+
+
+Bilophila_Clostridium_MP <- ggpubr::ggscatter(MP, "Clostridium_scindens", "Bilophila_wadsworthia", add = "reg.line", add.params = list(color = '#660000',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "MP") + geom_point(shape = 21, fill = '#CC0000', size = 2.5)
+
+Bilophila_Clostridium_stage0 <- ggpubr::ggscatter(Stage_0, "Clostridium_scindens", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#663366', fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Stage_0") + geom_point(shape = 21, fill = '#CC99FF', size = 2.5)
+
+Bilophila_Clostridium_stageI_II <- ggpubr::ggscatter(Stage_I_II, "Clostridium_scindens", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#006699',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Stage_I_II") + geom_point(shape = 21, fill = '#0099CC', size = 2.5)
+       
+
+Bilophila_Clostridium_stage_III_IV <- ggpubr::ggscatter(Stage_III_IV, "Clostridium_scindens", "Bilophila_wadsworthia", 
+          add = "reg.line", add.params = list(color = '#006633',  fill = "lightgrey"), conf.int = TRUE, cor.coef = TRUE, cor.method = "spearman",
+          main = "Stage_III_IV") + geom_point(shape = 21, fill = '#66CC99', size = 2.5)
+
+Bilophila_Clostridium_healthy; 
+Bilophila_Clostridium_MP; 
+Bilophila_Clostridium_stage0; 
+Bilophila_Clostridium_stageI_II; 
+Bilophila_Clostridium_stage_III_IV;
+dev.off()
+```
+ 
+
+grid.arrange(Bilophila_Clostridium_healthy,Bilophila_Clostridium_MP,Bilophila_Clostridium_stage0,Bilophila_Clostridium_stageI_II,Bilophila_Clostridium_stage_III_IV, ncol=2)
+
+```{r}
+library(gridExtra)
+library(grid)
+library(ggplot2)
+
+png(file = "~/metabolomics.microbiome/figures/Yachida_2019/Bilophila_Clostridium_plots.png",width=4, height=6)
+grid.arrange(Bilophila_Clostridium_healthy,Bilophila_Clostridium_MP,Bilophila_Clostridium_stage0,Bilophila_Clostridium_stageI_II,Bilophila_Clostridium_stage_III_IV, ncol=3,nrow=2, widths = )
+dev.off()
+
+Bilophila_Clostridium_healthy; 
+Bilophila_Clostridium_MP; 
+Bilophila_Clostridium_stage0; 
+Bilophila_Clostridium_stageI_II; 
+Bilophila_Clostridium_stage_III_IV; 
+dev.off()
+```
+
+resMP <- cor(as.matrix(MP[,c(3,4)], type ="spearman"));
+
+resH_2 <-cor.test(Healthy$Bilophila_wadsworthia, Healthy$Clostridium_scindens, 
+                    method = "spearman")
+resMP_2 <-cor.test(MP$Bilophila_wadsworthia, MP$Clostridium_scindens, 
+                    method = "spearman")
+
+#play with the data 
+corr_mat <- round(cor(bacteria_abundance[,2:8367]),2) 
+head(corr_mat)
+corr_mat <- as.tibble(corr_mat)
+
+bilophila <- corr_mat["Clostridium scindens","Bilophila wadsworthia"]
+ciao <- bilophila["Clostridium scindens"]
+```
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
